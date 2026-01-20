@@ -5,6 +5,7 @@ import Home from './page/home/home'
 import About from './page/about/about'
 import Contact from './page/contact/contact'
 import SignUp from './page/signUp/signUp'
+
 const App = () => {
   const router=createBrowserRouter([
     {
