@@ -2,4 +2,38 @@ nav{
     display: flex;
     align-items: center;
     justify-content: space-between;
+    padding: 10px 40px;
+}
+footer{
+    background-color: black;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    padding: 50px 50px;
+}
+.name{
+    font-size: 25px;
+}
+.catalog-btn-outline {
+  display: inline-block;
+  padding: 5px 15px;
+  border: 2px solid #333;
+  color: #333;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.catalog-btn-outline:hover {
+  background-color: #333;
+  color: #fff;
+}
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+.samsung {
+  font-family: 'Roboto', sans-serif;
+}
+.team-swiper{
+  
 }
