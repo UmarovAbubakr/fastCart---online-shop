@@ -3,7 +3,6 @@ import React from 'react';
 const Contact = () => {
   return (
     <div className="max-w-[1170px] mx-auto px-4 py-20">
-      {/* Хлебные крошки */}
       <nav className="flex mb-10 text-sm">
         <span className="text-gray-400">Home</span>
         <span className="mx-2 text-gray-400">/</span>
@@ -11,9 +10,7 @@ const Contact = () => {
       </nav>
 
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* Левая панель: Информация */}
         <div className="w-full lg:w-[340px] shadow-[0px_1px_13px_rgba(0,0,0,0.05)] rounded p-8 flex flex-col gap-8">
-          {/* Блок Call To Us */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-[#DB4444] rounded-full flex items-center justify-center text-white">
@@ -29,7 +26,6 @@ const Contact = () => {
 
           <div className="border-t border-gray-300 w-full" />
 
-          {/* Блок Write To Us */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-[#DB4444] rounded-full flex items-center justify-center text-white">
@@ -45,7 +41,6 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Правая панель: Форма */}
         <div className="flex-1 shadow-[0px_1px_13px_rgba(0,0,0,0.05)] rounded p-8">
           <form className="flex flex-col h-full justify-between gap-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -1,6 +1,111 @@
-import React from 'react';
-
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { editProfile, getProfileInfo, getUser } from '../../api/userApi/userApi';
+import { jwtDecode } from 'jwt-decode';
+import { useFormik } from 'formik';
+import { Input } from 'antd';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter ,
+  DialogClose 
+} from "@/components/ui/dialog"
 const MyAccount = () => {
+  const dispatch = useDispatch();
+  const userState = useSelector((store) => store.user) || {};
+
+  const userData = userState.data;
+
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+
+  const token = localStorage.getItem('token');
+  const user = token ? jwtDecode(token) : null;
+
+
+  useEffect(() => {
+    if (user?.sid) {
+      dispatch(getUser(user.sid));
+    }
+  }, [dispatch, user?.sid]);
+
+  useEffect(() => {
+    if (userData) {
+      setFirstName(userData.firstName);
+      setLastName(userData.name || '');
+      setEmail(userData.email || '');
+      setAddress(userData.address || '');
+    }
+  }, [userData]);
+
+  console.log(userData);
+
+  const [profile, setProfile] = useState (null);
+
+  useEffect(() => {
+    if (token) {
+      const fetchProfile = async () => {
+        try {
+          const decoded = jwtDecode(token);
+          const userId = decoded.sid;
+
+          const data = await getProfileInfo(userId);
+          setProfile(data);
+        } catch (error) {
+          console.error("Invalid token or failed request", error);
+        }
+      };
+      fetchProfile();
+    }
+  }, [token]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const updatedData = {
+      firstName,
+      name: lastName,
+      email,
+      address,
+      currentPassword,
+      newPassword
+    };
+    console.log(updatedData);
+  };
+
+
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      firstName: profile?.firstName || "",
+      lastName: profile?.lastName || "",
+      email: profile?.email || "",
+      phoneNumber: profile?.phoneNumber || "",
+      dob: profile?.dob || "",
+      image: null,
+    },
+    onSubmit: (values) => {
+      const formdata = new FormData();
+      formdata.append("lastName", values.lastName);
+      formdata.append("firstName", values.firstName);
+      formdata.append("email", values.email);
+      formdata.append("phoneNumber", values.phoneNumber);
+      formdata.append("dob", values.dob);
+
+      if (values.image) formdata.append("image", values.image);
+      editProfile(formdata);
+    }
+  });
+
+
   return (
     <div className="max-w-[1170px] mx-auto px-4 py-20">
       <div className="flex justify-between items-center mb-16">
@@ -10,7 +115,7 @@ const MyAccount = () => {
           <span className="text-black font-medium">My Account</span>
         </nav>
         <p className="text-sm">
-          Welcome! <span className="text-[#DB4444]">Md Rimel</span>
+          Welcome! <span className="text-[#DB4444]">{userData?.firstName || 'Guest'}</span>
         </p>
       </div>
 
@@ -40,79 +145,71 @@ const MyAccount = () => {
 
         <main className="flex-1 shadow-[0px_1px_13px_rgba(0,0,0,0.05)] rounded p-8 lg:p-12">
           <h2 className="text-[#DB4444] text-xl font-medium mb-8">Edit Your Profile</h2>
-          
-          <form className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm">First Name</label>
-                <input 
-                  type="text" 
-                  placeholder="Md" 
-                  className="bg-[#F5F5F5] px-4 py-3 rounded outline-none"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm">Last Name</label>
-                <input 
-                  type="text" 
-                  placeholder="Rimel" 
-                  className="bg-[#F5F5F5] px-4 py-3 rounded outline-none"
-                />
-              </div>
+          <form onSubmit={formik.handleSubmit}>
+            <label className="text-red-600 font-bold text-2xl mb-3">
+              {("contactTitle")}
+            </label>
+            <br />
+            <div className="flex justify-between md:gap-5 gap-2">
+              <Input
+                name="firstName"
+                value={formik.values.firstName}
+                onChange={formik.handleChange}
+                placeholder={("firstName")}
+              />
+              <Input
+                name="lastName"
+                value={formik.values.lastName}
+                onChange={formik.handleChange}
+                placeholder={("lastName")}
+              />
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="flex flex-col gap-2">
-                <label className="text-sm">Email</label>
-                <input 
-                  type="email" 
-                  placeholder="rimel1111@gmail.com" 
-                  className="bg-[#F5F5F5] px-4 py-3 rounded outline-none"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm">Address</label>
-                <input 
-                  type="text" 
-                  placeholder="Kingston, 5236, United State" 
-                  className="bg-[#F5F5F5] px-4 py-3 rounded outline-none"
-                />
-              </div>
+            <div className="flex justify-between my-3 md:gap-5 gap-2">
+              <Input
+                name="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                placeholder={("email")}
+              />
+              <Input
+                name="phoneNumber"
+                value={formik.values.phoneNumber}
+                onChange={formik.handleChange}
+                placeholder={("phoneField")}
+              />
             </div>
-
-            <div className="space-y-4 pt-4">
-              <h3 className="text-sm font-medium">Password Changes</h3>
-              <div className="flex flex-col gap-4">
-                <input 
-                  type="password" 
-                  placeholder="Current Password" 
-                  className="bg-[#F5F5F5] px-4 py-3 rounded outline-none w-full"
-                />
-                <input 
-                  type="password" 
-                  placeholder="New Password" 
-                  className="bg-[#F5F5F5] px-4 py-3 rounded outline-none w-full"
-                />
-                <input 
-                  type="password" 
-                  placeholder="Confirm New Password" 
-                  className="bg-[#F5F5F5] px-4 py-3 rounded outline-none w-full"
-                />
-              </div>
+            <div className="flex md:mt-4 mt-3 md:gap-5 gap-2">
+              <Input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={(event) =>
+                  formik.setFieldValue("image", event.currentTarget.files?.[0])
+                }
+              />
+              <Input
+                name="dob"
+                value={formik.values.dob}
+                onChange={formik.handleChange}
+                placeholder={("dob")}
+              />
             </div>
-
-            <div className="flex justify-end items-center gap-8 pt-4">
-              <button type="button" className="text-sm hover:underline">
-                Cancel
-              </button>
-              <button 
-                type="submit" 
-                className="bg-[#DB4444] text-white px-12 py-4 rounded hover:bg-red-600 transition-colors shadow-sm"
+            <div className="flex justify-end gap-2 md:my-5 my-3">
+              <button
+                type="button"
+                className="border rounded-sm px-6.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 duration-200"
               >
-                Save Changes
+                {("cancel")}
+              </button>
+              <button
+                type="submit"
+                className="bg-[#DB4444] hover:bg-[#db4444d5] duration-200  text-white px-3 py-1.5 rounded-sm"
+              >
+                {("saveChanges")}
               </button>
             </div>
           </form>
+
         </main>
       </div>
     </div>

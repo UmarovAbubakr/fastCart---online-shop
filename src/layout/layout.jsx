@@ -1,133 +1,231 @@
-import React, { useState } from 'react'
-import { Link, Outlet } from 'react-router-dom'
-import whishList from './../assets/whishList.svg'
-import cart from './../assets/cart.svg'
-import user from './../assets/user.svg'
+import { useNavigate } from 'react-router-dom'; // Добавь в импорты
+import React, { useEffect, useState } from 'react';
+import { Search, Heart, ShoppingCart, User, Settings, Menu, X, LogOut } from 'lucide-react';
 import fastCard from './../assets/fastCard.svg'
-import icon from './../assets/icon.svg'
-import facebook from './../assets/facebook.svg'
-import twiter from './../assets/twiter.svg'
-import instagram from './../assets/insatgram.svg'
-import linkedin from './../assets/linkedin.svg'
+import { Link, Outlet } from 'react-router-dom';
+import { getProducts } from '../api/productApi/productApi';
+import { useDispatch, useSelector } from 'react-redux';
+import icon from '../assets/icon.svg';
+import img1 from '../assets/facebook.svg';
+import img2 from '../assets/insatgram.svg';
+import img3 from '../assets/linkedin.svg';
+import img4 from '../assets/twiter.svg';
+
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuPortal,
+    DropdownMenuSeparator,
+    DropdownMenuShortcut,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button, Modal } from 'antd';
+import { getCart } from '../api/cart API/cartApi';
 
 const Layout = () => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const dispatch = useDispatch();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [wishCount, setWishCount] = useState(0);
+
+    const navigate = useNavigate();
+
+    const showModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleOk = () => {
+        localStorage.clear();
+
+        setIsModalOpen(false);
+        dispatch(getCart())
+        navigate('/signUp');
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
+    const { data } = useSelector((store) => store.todoCart)
+
+    useEffect(() => {
+        const updateCount = () => {
+            const list = JSON.parse(localStorage.getItem('wishlist')) || [];
+            setWishCount(list.length);
+        };
+
+        updateCount();
+        window.addEventListener('wishlistUpdated', updateCount);
+        return () => window.removeEventListener('wishlistUpdated', updateCount);
+    }, []);
+
+    useEffect(() => {
+        dispatch(getProducts(search));
+        dispatch(getCart())
+    }, [dispatch, search]);
+    const cartItems = data?.data?.[0]?.productsInCart;
+
+    const token = localStorage.getItem('token')
+
+    const uniquePositions = cartItems?.length
 
     return (
         <div className="min-h-screen flex flex-col">
-            <nav className="relative px-4 py-4 flex justify-between items-center bg-white border-b border-gray-200 lg:px-10">
+            <nav className="border-b border-gray-200 bg-white py-4 sticky top-0 z-50">
+                <div className="container mx-auto px-4 lg:px-10 flex items-center justify-between">
 
-                <div className="flex items-center gap-4">
-                    <Link to='/' className="flex-shrink-0">
-                        <img src={fastCard} alt="Logo" className="h-8 lg:h-10" />
-                    </Link>
-                    <button className="hidden md:block px-4 py-2 border-2 border-black rounded-md font-bold hover:bg-black hover:text-white transition-all">
-                        Каталог
+                    <button
+                        className="md:hidden p-1"
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    >
+                        {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
                     </button>
-                </div>
 
-                <div className="lg:hidden">
-                    <button onClick={() => setIsOpen(!isOpen)} className="p-2">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {isOpen ? (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            ) : (
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            )}
-                        </svg>
-                    </button>
-                </div>
-
-                <div className="hidden lg:flex items-center gap-8 font-medium">
-                    <Link to='/' className="hover:underline">Home</Link>
-                    <Link to='/contact' className="hover:underline">Contact</Link>
-                    <Link to='/about' className="hover:underline">About</Link>
-                    <Link to='/signUp' className="hover:underline">Sign Up</Link>
-                </div>
-
-                <div className="hidden md:flex items-center gap-5">
-                    <div className="flex items-center bg-[#f5f5f5] px-3 py-2 rounded">
-                        <input
-                            placeholder="What are you looking for?"
-                            className="bg-transparent outline-none text-sm w-[150px] lg:w-[200px]"
-                            type="text"
-                        />
-                        <img src={icon} alt="" className="w-4 h-4" />
-                    </div>
-                    <img src={whishList} alt="Wishlist" className="cursor-pointer w-6" />
-                    <img src={cart} alt="Cart" className="cursor-pointer w-6" />
-                    <Link to='/account'>
-                        <img src={user} alt="User" className="cursor-pointer w-6" />
+                    <Link to='/' className="flex items-center">
+                        <img src={fastCard} alt="Logo" className="h-6 md:h-8" />
                     </Link>
-                </div>
 
-                <div className={`${isOpen ? 'block' : 'hidden'} absolute top-full left-0 w-full bg-white z-50 border-b border-gray-200 lg:hidden shadow-lg`}>
-                    <div className="flex flex-col p-4 gap-4">
-                        <Link onClick={() => setIsOpen(false)} to='/' className="text-lg">Home</Link>
-                        <Link onClick={() => setIsOpen(false)} to='/contact' className="text-lg">Contact</Link>
-                        <Link onClick={() => setIsOpen(false)} to='/about' className="text-lg">About</Link>
-                        <Link onClick={() => setIsOpen(false)} to='/signUp' className="text-lg">Sign Up</Link>
-                        <hr />
-                        <div className="flex gap-6 py-2">
-                            <img src={whishList} alt="Wishlist" />
-                            <img src={cart} alt="Cart" />
-                            <Link to='/account'>
-                                <img src={user} alt="User" />
+                    <ul className="hidden md:flex items-center gap-8">
+                        <Link to='/' className="hover:text-gray-600 transition"><li>Home</li></Link>
+                        <Link to='/contact' className="hover:text-gray-600 transition"><li>Contact</li></Link>
+                        <Link to='/about' className="hover:text-gray-600 transition"><li>About</li></Link>
+                        {!token ? (
+                            <Link to='/signUp' className="hover:text-gray-600 transition"><li>Sign Up</li></Link>
+                        ):''}
+                    </ul>
+
+                    <div className="flex items-center gap-3 md:gap-5">
+                        <div className="relative hidden lg:flex items-center">
+                            <input
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                type="text"
+                                placeholder="Looking for?"
+                                className="bg-[#f5f5f5] text-sm py-2 px-4 rounded w-[150px] xl:w-[240px] focus:outline-none"
+                            />
+                            <Search size={18} className="absolute right-3 cursor-pointer" />
+                        </div>
+
+                        <div className="flex items-center gap-2 md:gap-4">
+                            <Link to="/wishlist" className="relative">
+                                <Heart size={24} className="cursor-pointer hover:text-red-500 transition" />
+                                {wishCount > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-[#db4444] text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                                        {wishCount}
+                                    </span>
+                                )}
                             </Link>
+                            <Link to='/cart' className="relative group">
+                                <ShoppingCart size={24} className="group-hover:text-blue-500 transition" />
+                                {uniquePositions > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-[#db4444] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                                        {uniquePositions}
+                                    </span>
+                                )}
+                            </Link>
+                            {localStorage.getItem('token') && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <div><Settings size={24} /></div>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuGroup>
+                                            <Link className='flex gap-2 p-2 font-bold cursor-pointer hover:text-blue-500 transition' to='/account'>
+                                                <User size={24} />
+                                                User
+                                            </Link>
+                                        </DropdownMenuGroup>
+                                        <DropdownMenuGroup onClick={showModal} className='flex gap-2 p-2 font-bold cursor-pointer hover:text-blue-500 transition'>
+                                            <LogOut />
+                                            Log Out
+                                        </DropdownMenuGroup>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
                         </div>
                     </div>
                 </div>
+
+                {isMenuOpen && (
+                    <div className="md:hidden bg-white border-t border-gray-100 absolute w-full left-0 py-4 px-6 shadow-lg">
+                        <ul className="flex flex-col gap-4 text-lg pt-50">
+                            <Link to='/' onClick={() => setIsMenuOpen(false)}><li>Home</li></Link>
+                            <Link to='/contact' onClick={() => setIsMenuOpen(false)}><li>Contact</li></Link>
+                            <Link to='/about' onClick={() => setIsMenuOpen(false)}><li>About</li></Link>
+                            <Link to='/signUp' onClick={() => setIsMenuOpen(false)}><li>Sign Up</li></Link>
+                        </ul>
+                    </div>
+                )}
             </nav>
 
             <main className="flex-grow">
                 <Outlet />
             </main>
 
-            <footer className="bg-black text-white p-10 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-10">
-                <div>
-                    <div className='text-xl font-bold mb-4'>Exclusive</div>
-                    <div className="mb-2">Subscribe</div>
-                    <div className='text-sm mb-4'>Get 10% off your first order</div>
-                    <div className='border-2 border-white rounded-[5px] flex p-2'>
-                        <input placeholder='Enter your email' className='bg-transparent outline-none text-sm flex-grow' type="text" />
-                        <img src={icon} alt="" className="w-5" />
+            <footer className='bg-black text-white py-10 px-6'>
+                <div className="container mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+                    <div className='flex flex-col gap-3'>
+                        <h3 className='text-2xl font-bold'>Exclusive</h3>
+                        <p>Subscribe</p>
+                        <p className='text-sm text-gray-400'>Get 10% off your first order</p>
+                        <div className='border border-white rounded p-2 flex justify-between'>
+                            <input className='bg-transparent outline-none w-full text-sm' placeholder='Enter email' type="text" />
+                            <img src={icon} alt="send icon" className="w-5" />
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <div className='font-bold mb-4'>Support</div>
-                    <div className='text-sm mb-2'>111 Bijoy sarani, Dhaka, DH 1515, Bangladesh.</div>
-                    <div className='text-sm mb-2'>exclusive@gmail.com</div>
-                    <div className='text-sm'>+88015-88888-9999</div>
-                </div>
-                <div>
-                    <div className='font-bold mb-4'>Account</div>
-                    <div className='text-sm mb-2 cursor-pointer'>My Account</div>
-                    <div className='text-sm mb-2 cursor-pointer'>Cart</div>
-                    <div className='text-sm mb-2 cursor-pointer'>Wishlist</div>
-                    <div className='text-sm cursor-pointer'>Shop</div>
-                </div>
-                <div>
-                    <div className='font-bold mb-4'>Quick Link</div>
-                    <div className='text-sm mb-2 cursor-pointer'>Privacy Policy</div>
-                    <div className='text-sm mb-2 cursor-pointer'>Terms Of Use</div>
-                    <div className='text-sm mb-2 cursor-pointer'>FAQ</div>
-                    <div className='text-sm cursor-pointer'>Contact</div>
-                </div>
-                <div>
-                    <div className='font-bold mb-4'>Social</div>
-                    <div className='flex gap-4'>
-                        <img src={facebook} alt="FB" className="w-6" />
-                        <img src={twiter} alt="TW" className="w-6" />
-                        <img src={instagram} alt="IN" className="w-6" />
-                        <img src={linkedin} alt="LN" className="w-6" />
+
+                    <div className='flex flex-col gap-3'>
+                        <h3 className='text-xl font-bold'>Support</h3>
+                        <p className='text-sm'>111 Bijoy sarani, Dhaka, Bangladesh</p>
+                        <p className='text-sm'>exclusive@gmail.com</p>
+                        <p className='text-sm'>+88015-88888-9999</p>
+                    </div>
+
+                    <div className='flex flex-col gap-3'>
+                        <h3 className='text-xl font-bold'>Account</h3>
+                        <p className='text-sm cursor-pointer'>My Account</p>
+                        <p className='text-sm cursor-pointer'>Cart</p>
+                        <p className='text-sm cursor-pointer'>Wishlist</p>
+                        <p className='text-sm cursor-pointer'>Shop</p>
+                    </div>
+
+                    <div className='flex flex-col gap-3'>
+                        <h3 className='text-xl font-bold'>Quick Links</h3>
+                        <p className='text-sm cursor-pointer'>Privacy Policy</p>
+                        <p className='text-sm cursor-pointer'>Terms Of Use</p>
+                        <p className='text-sm cursor-pointer'>FAQ</p>
+                        <p className='text-sm cursor-pointer'>Contact</p>
+                    </div>
+
+                    <div className='flex flex-col gap-3'>
+                        <h3 className='text-xl font-bold'>Follow Us</h3>
+                        <div className='flex items-center gap-4'>
+                            <img src={img1} className="w-6 cursor-pointer" alt="fb" />
+                            <img src={img2} className="w-6 cursor-pointer" alt="ig" />
+                            <img src={img3} className="w-6 cursor-pointer" alt="in" />
+                            <img src={img4} className="w-6 cursor-pointer" alt="tw" />
+                        </div>
                     </div>
                 </div>
             </footer>
-            <div className='bg-black text-gray-500 py-4 text-center border-t border-gray-800 text-xs md:text-sm'>
-                Copyright Rimel 2022. All right reserved
-            </div>
+            <Modal
+                open={isModalOpen}
+                onOk={handleOk}
+                onCancel={handleCancel}
+                okText="Выйти"
+                cancelText="Отмена"
+                okButtonProps={{ danger: true }}
+            >
+                <p className="py-4">Вы уверены, что хотите выйти?</p>
+            </Modal>
         </div>
-    )
-}
+    );
+};
 
 export default Layout

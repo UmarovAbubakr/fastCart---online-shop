@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, use } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, Navigation } from 'swiper/modules';
@@ -32,14 +33,63 @@ import photoAparat from './../../assets/photoAparat.svg';
 import noute from './../../assets/noute.svg';
 import car from './../../assets/car.svg';
 import krasofki from './../../assets/krasofki.svg';
+import { getProducts } from '../../api/productApi/productApi';
+import { URL } from '../../utils/url';
+import { getCategory } from '../../api/categoryApi/categoryApi';
+import { AddToCart } from '../../api/cart API/cartApi';
+import { Eye, Heart } from 'lucide-react';
+
 
 const Home = () => {
+  const dispatch = useDispatch();
+  const [wishlist, setWishlist] = useState(() => {
+    const saved = localStorage.getItem('wishlist');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const { data = {} } = useSelector((store) => store.todo);
+  const { data: category } = useSelector((state) => state.todoCategory);
+
+  const handleViewProduct = (product) => {
+    localStorage.setItem('selectedProduct', JSON.stringify(product));
+  };
+
   const [timeLeft, setTimeLeft] = useState({
     days: 3,
     hours: 23,
     minutes: 19,
     seconds: 56,
   });
+
+  const toggleWishlist = (product) => {
+    const savedWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+    const isExist = savedWishlist.find(item => item.id === product.id);
+
+    let updatedWishlist;
+    if (isExist) {
+      updatedWishlist = savedWishlist.filter(item => item.id !== product.id);
+    } else {
+      updatedWishlist = [...savedWishlist, product];
+    }
+
+    setWishlist(updatedWishlist);
+
+    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+
+    window.dispatchEvent(new Event('wishlistUpdated'));
+  };
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -69,12 +119,7 @@ const Home = () => {
 
   const formatTime = (num) => String(num).padStart(2, '0');
 
-  const flashProducts = [
-    { id: 1, name: "HAVIT HV-G92 Gamepad", image: jostik, discount: "-40%", currentPrice: 120, oldPrice: 160, rating: 5, reviews: 88 },
-    { id: 2, name: "AK-900 Wired Keyboard", image: klaviatura, discount: "-35%", currentPrice: 960, oldPrice: 1160, rating: 4, reviews: 75 },
-    { id: 3, name: "IPS LCD Gaming Monitor", image: ekran, discount: "-30%", currentPrice: 370, oldPrice: 400, rating: 5, reviews: 99 },
-    { id: 4, name: "S-Series Comfort Chair", image: stul, discount: "-25%", currentPrice: 375, oldPrice: 400, rating: 4, reviews: 99 },
-  ];
+
 
   const exploreProducts = [
     { id: 101, name: "Breed Dry Dog Food", image: korm, currentPrice: 100, rating: 3, reviews: 35 },
@@ -102,6 +147,12 @@ const Home = () => {
     { id: 5, name: "HeadPhones", icon: "M12 1v2m0 18v2M5 12H3m18 0h-2M7 7L5.5 5.5m13 13L17 17m0-10L18.5 5.5M5.5 18.5L7 17" },
     { id: 6, name: "Gaming", icon: "M15 10H9m6 4H9m10-4a5 5 0 01-10 0V9a5 5 0 0110 0v1z" },
   ];
+
+  useEffect(() => {
+    dispatch(getProducts());
+    dispatch(getCategory())
+    console.log(dispatch(getCategory()));
+  }, [dispatch]);
 
   return (
     <div className="w-full bg-white pt-10 px-4 lg:px-10">
@@ -134,7 +185,6 @@ const Home = () => {
           ))}
         </Swiper>
       </div>
-      <h1 className='samsung'>SAMSUNG</h1>
       <section className="max-w-[1170px] mx-auto py-16 border-b">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-5 h-10 bg-[#DB4444] rounded" />
@@ -151,30 +201,74 @@ const Home = () => {
             ))}
           </div>
         </div>
-        <Swiper slidesPerView={1} spaceBetween={30} breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 4 } }} modules={[Navigation]} navigation className="mb-10">
-          {flashProducts.map((p) => (
-            <SwiperSlide key={p.id}>
-              <div className="group">
-                <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
-                  <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-2 py-1 rounded">{p.discount}</span>
-                  <div className="absolute top-3 right-3 flex flex-col gap-2">
-                    <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" /></svg></button>
-                    <Link to='/Info'>
-                      <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
-                    </Link>
+        <Swiper slidesPerView={1} spaceBetween={30} breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 4 } }} className="mb-10">
+          {data?.products?.map((p) => {
+            const isProductInWishlist = wishlist.some(item => item.id === p.id);
+            return (
+              <SwiperSlide key={p.id}>
+                <div className="group">
+                  <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
+                    {p.hasDiscount && (
+                      <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-2 py-1 rounded">
+                        -{Math.round(100 - (p.discountPrice / p.price) * 100)}%
+                      </span>
+                    )}
+
+                    <div className="absolute top-3 right-3 flex flex-col gap-2">
+                      <Link>
+                        <button
+                          onClick={() => toggleWishlist(p)}
+                          className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"
+                        >
+                          <Heart
+                            size={20}
+                            fill={isProductInWishlist ? "#DB4444" : "none"}
+                            stroke={isProductInWishlist ? "#DB4444" : "currentColor"}
+                          />
+                        </button>
+                      </Link>
+                      <Link to={`/info`} onClick={() => handleViewProduct(p)}>
+                        <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors">
+                          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        </button>
+                      </Link>
+                    </div>
+
+                    <img
+                      src={`${URL}/images/${p.image}`}
+                      alt={p.productName}
+                      className="max-h-[180px] object-contain group-hover:scale-105 transition-transform"
+                    />
+
+                    <button style={{cursor:'pointer'}} onClick={() => { dispatch(AddToCart(p.id)) }} className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all">
+                      Add To Cart
+                    </button>
                   </div>
-                  <img src={p.image} className="max-h-[180px] object-contain group-hover:scale-105 transition-transform" />
-                  <button className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all">Add To Cart</button>
+
+                  <div className="mt-4">
+                    <h3 className="font-semibold text-black">{p.productName}</h3>
+                    <div className="flex gap-3 font-medium">
+                      {p.hasDiscount ? (
+                        <>
+                          <span className="text-[#DB4444]">${p.discountPrice}</span>
+                          <span className="text-gray-400 line-through">${p.price}</span>
+                        </>
+                      ) : (
+                        <span className="text-[#DB4444]">${p.price}</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-4">
-                  <h3 className="font-semibold">{p.name}</h3>
-                  <div className="flex gap-3 text-[#DB4444] font-medium">${p.currentPrice} <span className="text-gray-400 line-through">${p.oldPrice}</span></div>
-                </div>
-              </div>
-            </SwiperSlide>
-          ))}
+              </SwiperSlide>
+            )
+          })}
         </Swiper>
-        <div className="flex justify-center"><button className="bg-[#DB4444] text-white px-12 py-4 rounded">View All Products</button></div>
+        <Link to='/products'>
+          <div className="flex justify-center mt-14"><button className="bg-[#DB4444] text-white px-12 py-4 rounded">View All Products</button></div>
+        </Link>
       </section>
 
       <section className="max-w-[1170px] mx-auto py-16 border-b">
@@ -184,10 +278,13 @@ const Home = () => {
         </div>
         <h2 className="text-3xl font-semibold mb-10">Browse By Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
-          {categories.map((cat) => (
-            <div key={cat.id} className="border flex flex-col items-center justify-center h-[145px] rounded hover:bg-[#DB4444] hover:text-white transition-colors cursor-pointer group">
-              <svg className="w-14 h-14 mb-2" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path d={cat.icon} /></svg>
-              <span>{cat.name}</span>
+          {category?.map((cat) => (
+            <div
+              key={cat.id}
+              className="border flex flex-col items-center justify-center h-[145px] rounded hover:bg-[#DB4444] hover:text-white transition-colors cursor-pointer group"
+            >
+              <img src={URL + `/images/${cat.categoryImage}`} alt="" />
+              <span className="text-sm font-medium">{cat.categoryName}</span>
             </div>
           ))}
         </div>
@@ -217,33 +314,71 @@ const Home = () => {
         </div>
         <h2 className="text-3xl font-semibold mb-10">Explore Our Products</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {exploreProducts.map((p) => (
-            <div key={p.id} className="group cursor-pointer">
-              <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
-                {p.isNew && <span className="absolute top-3 left-3 bg-[#00FF66] text-white text-xs px-3 py-1 rounded">NEW</span>}
-                <div className="absolute top-3 right-3 flex flex-col gap-2">
-                  <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" /></svg></button>
-                  <Link to='/Info'>
-                    <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg></button>
-                  </Link>
-                </div>
-                <img src={p.image} alt={p.name} className="max-h-[180px] object-contain group-hover:scale-105 transition-transform" />
-                <button className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all">Add To Cart</button>
-              </div>
-              <div className="mt-4 space-y-2">
-                <h3 className="font-semibold">{p.name}</h3>
-                <div className="flex gap-2 items-center">
-                  <span className="text-[#DB4444] font-medium">${p.currentPrice}</span>
-                  <div className="flex text-[#FFAD33]">
-                    {[...Array(5)].map((_, i) => (<svg key={i} width="16" height="16" fill={i < p.rating ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>))}
+          {data?.products?.map((p) => {
+            const isProductInWishlist = wishlist.some(item => item.id === p.id);
+            return (
+              <div key={p.id} className="group cursor-pointer">
+                <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
+                  {p.hasDiscount && (
+                    <span className="absolute top-3 left-3 bg-[#00FF66] text-white text-xs px-3 py-1 rounded">
+                      NEW
+                    </span>
+                  )}
+                  <div className="absolute top-3 right-3 flex flex-col gap-2">
+                    <button
+                      onClick={() => toggleWishlist(p)}
+                      className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"
+                    >
+                      <Heart size={20} fill={isProductInWishlist ? "red" : "none"} />
+                    </button>
+                    <Link to={`/product/${p.id}`} onClick={() => handleViewProduct(p)}>
+                      <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
+                    </Link>
                   </div>
-                  <span className="text-xs text-gray-400">({p.reviews})</span>
+                  <img
+                    src={`${URL}/images/${p.image}`}
+                    alt={p.productName}
+                    className="max-h-[180px] object-contain group-hover:scale-105 transition-transform"
+                  />
+                  <button style={{cursor:'pointer'}} className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all">
+                    Add To Cart
+                  </button>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <h3 className="font-semibold">{p.productName}</h3>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[#DB4444] font-medium">
+                      ${p.hasDiscount ? p.discountPrice : p.price}
+                    </span>
+                    <div className="flex text-[#FFAD33]">
+                      {[...Array(5)].map((_, i) => (
+                        <svg
+                          key={i}
+                          width="16"
+                          height="16"
+                          fill={i < 5 ? "currentColor" : "none"}
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                        </svg>
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-400">({p.quantity})</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
-        <div className="flex justify-center mt-14"><button className="bg-[#DB4444] text-white px-12 py-4 rounded">View All Products</button></div>
+        <Link to='/products'>
+          <div className="flex justify-center mt-14"><button className="bg-[#DB4444] text-white px-12 py-4 rounded">View All Products</button></div>
+        </Link>
       </section>
 
       <section className="max-w-[1170px] mx-auto py-16">

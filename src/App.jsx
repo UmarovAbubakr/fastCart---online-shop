@@ -10,6 +10,9 @@ import NotFound from './page/notFould/notFould'
 import MyAccount from './page/Account/account'
 import ChackOut from './page/chackOut/chackOut'
 import Info from './page/Info/info'
+import Cart from './page/cart/cart'
+import Products from './page/products/products'
+import WhishList from './page/wishlist/whishList'
 
 const App = () => {
   const router=createBrowserRouter([
@@ -42,8 +45,20 @@ const App = () => {
           element:<MyAccount/>
         },
         {
+          path:'/wishlist',
+          element:<WhishList/>
+        },
+        {
           path:'/checkOut',
           element:<ChackOut/>
+        },
+        {
+          path:'/products',
+          element:<Products/>
+        },
+        {
+          path:'/cart',
+          element:<Cart/>
         },
         {
           path:'/Info',
