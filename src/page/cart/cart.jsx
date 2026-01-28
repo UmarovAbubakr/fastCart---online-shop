@@ -1,12 +1,13 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { deleteFromCart, clearCart, getCart } from "../../api/cart API/cartApi";
 import { URL } from "./../../utils/url";
-
+import img from './../../assets/image copy 5.png'
 const Cart = () => {
   const { data } = useSelector((store) => store.todoCart);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(getCart());
@@ -78,8 +79,11 @@ const Cart = () => {
             </div>
           ))
         ) : (
-          <div className="text-center py-20 border rounded text-gray-500">
-            Cart is empty
+          <div className="text-center py-10  0 border rounded">
+            <img style={{width:'180px',margin:'auto',padding:'auto'}} className="py-5" src={img} alt="" />
+            <h1 className="text-black text-lg font-bold">And the basket is clean</h1>
+            <h1 className="text-gray-700 font-bold">Add products to complete the order</h1>
+            <button className="bg-yellow-400 text-black px-5 py-3 rounded-xl font-medium" onClick={()=>{navigate('/products')}}>Products</button>
           </div>
         )}
       </div>

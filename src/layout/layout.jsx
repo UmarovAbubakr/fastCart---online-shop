@@ -103,8 +103,6 @@ const Layout = () => {
                     <div className="flex items-center gap-3 md:gap-5">
                         <div className="relative hidden lg:flex items-center">
                             <input
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
                                 type="text"
                                 placeholder="Looking for?"
                                 className="bg-[#f5f5f5] text-sm py-2 px-4 rounded w-[150px] xl:w-[240px] focus:outline-none"

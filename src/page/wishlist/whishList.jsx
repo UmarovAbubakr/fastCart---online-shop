@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Trash2, ShoppingCart } from 'lucide-react';
 import { URL } from './../../utils/url';
 import { Link } from 'react-router-dom';
-
+import img from './../../assets/Gemini_Generated_Image_2i8ffz2i8ffz2i8f.png'
 const WhishList = () => {
   const [items, setItems] = useState([]);
 
@@ -59,8 +59,9 @@ const WhishList = () => {
       
       {items.length === 0 && (
         <div className="text-center py-20">
-          <p className="text-gray-500 mb-5">Your wishlist is empty</p>
-          <Link to="/" className="bg-[#DB4444] text-white px-10 py-3 rounded">Go Shopping</Link>
+          <img className='w-[200px] rounded-xl m-auto' src={img} alt="" />
+          <br/><p className="text-black mb-5 text-2xl font-bold">Your wishlist is empty</p>
+          <Link to="/" className="bg-[#FFC845] hover:bg-[#ffd677] text-white px-10 py-3 rounded">Go Shopping</Link>
         </div>
       )}
     </div>

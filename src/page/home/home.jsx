@@ -1,8 +1,11 @@
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import { Autoplay, Pagination } from 'swiper/modules';
+import { notification } from 'antd';
+import { Eye, Heart, ShoppingBag } from 'lucide-react';
+
 import './../../App.css'
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -21,37 +24,24 @@ import onePlus from './../../assets/image copy.png';
 import onePlusLogo from './../../assets/onePlus.svg';
 import xiaomi from './../../assets/image copy 2.png';
 import xiaomiLogo from './../../assets/xiaomi.svg';
-import jostik from './../../assets/jostik.svg';
-import jostikS from './../../assets/jostikS.svg';
-import klaviatura from './../../assets/klaviatura.svg';
-import ekran from './../../assets/ekran.svg';
-import stul from './../../assets/stul.svg';
-import kurtka from './../../assets/kurtka.svg';
-import korm from './../../assets/korm.svg';
-import krem from './../../assets/krem.svg';
-import photoAparat from './../../assets/photoAparat.svg';
-import noute from './../../assets/noute.svg';
-import car from './../../assets/car.svg';
-import krasofki from './../../assets/krasofki.svg';
+
 import { getProducts } from '../../api/productApi/productApi';
 import { URL } from '../../utils/url';
 import { getCategory } from '../../api/categoryApi/categoryApi';
 import { AddToCart } from '../../api/cart API/cartApi';
-import { Eye, Heart } from 'lucide-react';
-
 
 const Home = () => {
   const dispatch = useDispatch();
+  const [api, contextHolder] = notification.useNotification();
+
+  const { data = {} } = useSelector((store) => store.todo);
+  const { data: category } = useSelector((state) => state.todoCategory);
+  const cartItems = useSelector((state) => state.cart?.data || []);
+
   const [wishlist, setWishlist] = useState(() => {
     const saved = localStorage.getItem('wishlist');
     return saved ? JSON.parse(saved) : [];
   });
-  const { data = {} } = useSelector((store) => store.todo);
-  const { data: category } = useSelector((state) => state.todoCategory);
-
-  const handleViewProduct = (product) => {
-    localStorage.setItem('selectedProduct', JSON.stringify(product));
-  };
 
   const [timeLeft, setTimeLeft] = useState({
     days: 3,
@@ -60,52 +50,71 @@ const Home = () => {
     seconds: 56,
   });
 
+  const handleAddToCart = (product) => {
+    const isExist = cartItems.some(item => item.id === product.id);
+    if (isExist) {
+      api.warning({
+        message: 'Product already in cart',
+        description: `${product.productName} is already there.`,
+        placement: 'bottomRight',
+      });
+    } else {
+      dispatch(AddToCart(product.id));
+      api.success({
+        message: 'Added to cart',
+        description: `${product.productName} added successfully.`,
+        placement: 'bottomRight',
+      });
+    }
+  };
+
   const toggleWishlist = (product) => {
     const savedWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
     const isExist = savedWishlist.find(item => item.id === product.id);
-
     let updatedWishlist;
+    
     if (isExist) {
       updatedWishlist = savedWishlist.filter(item => item.id !== product.id);
+      api.info({
+        message: 'Removed from wishlist',
+        description: `${product.productName} has been removed.`,
+        placement: 'bottomRight',
+      });
     } else {
       updatedWishlist = [...savedWishlist, product];
+      api.success({
+        message: 'Added to wishlist',
+        description: `${product.productName} added successfully.`,
+        placement: 'bottomRight',
+      });
     }
-
+    
     setWishlist(updatedWishlist);
-
     localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
-
     window.dispatchEvent(new Event('wishlistUpdated'));
   };
 
-  const showModal = () => {
-    setIsModalOpen(true);
+  const handleViewProduct = (product) => {
+    localStorage.setItem('selectedProduct', JSON.stringify(product));
   };
 
-  const handleOk = () => {
-    setIsModalOpen(false);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
-
+  useEffect(() => {
+    dispatch(getProducts());
+    dispatch(getCategory());
+  }, [dispatch]);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         let { days, hours, minutes, seconds } = prev;
-        if (seconds > 0) {
-          seconds--;
-        } else {
+        if (seconds > 0) seconds--;
+        else {
           seconds = 59;
-          if (minutes > 0) {
-            minutes--;
-          } else {
+          if (minutes > 0) minutes--;
+          else {
             minutes = 59;
-            if (hours > 0) {
-              hours--;
-            } else {
+            if (hours > 0) hours--;
+            else {
               hours = 23;
               if (days > 0) days--;
             }
@@ -119,19 +128,6 @@ const Home = () => {
 
   const formatTime = (num) => String(num).padStart(2, '0');
 
-
-
-  const exploreProducts = [
-    { id: 101, name: "Breed Dry Dog Food", image: korm, currentPrice: 100, rating: 3, reviews: 35 },
-    { id: 102, name: "CANON EOS DSLR Camera", image: photoAparat, currentPrice: 360, rating: 4, reviews: 95 },
-    { id: 103, name: "ASUS FHD Gaming Laptop", image: noute, currentPrice: 700, rating: 5, reviews: 325 },
-    { id: 104, name: "Curology Product Set", image: krem, currentPrice: 500, rating: 4, reviews: 145 },
-    { id: 105, name: "Kids Electric Car", image: car, currentPrice: 960, rating: 5, reviews: 65, isNew: true },
-    { id: 106, name: "Jr. Zoom Soccer Cleats", image: krasofki, currentPrice: 1160, rating: 5, reviews: 35 },
-    { id: 107, name: "GP11 Shooter USB Gamepad", image: jostikS, currentPrice: 660, rating: 4, reviews: 55, isNew: true },
-    { id: 108, name: "Quilted Satin Jacket", image: kurtka, currentPrice: 660, rating: 4, reviews: 55 },
-  ];
-
   const slides = [
     { id: 's1', name1: "Up to 10%", name2: 'off Voucher', logo: appleLogo, name: "iPhone 14 Series", img: iphone },
     { id: 's2', name1: "Samsung Galaxy", name2: 'S25 Ultra', logo: samsung, name: "Samsung Galaxy S25 Ultra", img: samsungImg },
@@ -139,23 +135,16 @@ const Home = () => {
     { id: 's4', name1: "Xiaomi 17", name2: ' Pro Max', logo: xiaomiLogo, name: "Xiaomi 17 Pro Max", img: xiaomi },
   ];
 
-  const categories = [
-    { id: 1, name: "Phones", icon: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" },
-    { id: 2, name: "Computers", icon: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" },
-    { id: 3, name: "SmartWatch", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-    { id: 4, name: "Camera", icon: "M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" },
-    { id: 5, name: "HeadPhones", icon: "M12 1v2m0 18v2M5 12H3m18 0h-2M7 7L5.5 5.5m13 13L17 17m0-10L18.5 5.5M5.5 18.5L7 17" },
-    { id: 6, name: "Gaming", icon: "M15 10H9m6 4H9m10-4a5 5 0 01-10 0V9a5 5 0 0110 0v1z" },
-  ];
-
-  useEffect(() => {
-    dispatch(getProducts());
-    dispatch(getCategory())
-    console.log(dispatch(getCategory()));
-  }, [dispatch]);
+  const NoProductsFound = () => (
+    <div className="w-full flex flex-col items-center justify-center py-20 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/50">
+      <ShoppingBag size={64} className="text-gray-200 mb-4" />
+      <h3 className="text-xl font-medium text-gray-400">No products available yet</h3>
+    </div>
+  );
 
   return (
     <div className="w-full bg-white pt-10 px-4 lg:px-10">
+      {contextHolder}
       <div className="max-w-[1170px] mx-auto">
         <Swiper
           style={{ borderRadius: '5px' }}
@@ -185,6 +174,7 @@ const Home = () => {
           ))}
         </Swiper>
       </div>
+
       <section className="max-w-[1170px] mx-auto py-16 border-b">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-5 h-10 bg-[#DB4444] rounded" />
@@ -201,74 +191,52 @@ const Home = () => {
             ))}
           </div>
         </div>
-        <Swiper slidesPerView={1} spaceBetween={30} breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 4 } }} className="mb-10">
-          {data?.products?.map((p) => {
-            const isProductInWishlist = wishlist.some(item => item.id === p.id);
-            return (
-              <SwiperSlide key={p.id}>
-                <div className="group">
-                  <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
-                    {p.hasDiscount && (
-                      <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-2 py-1 rounded">
-                        -{Math.round(100 - (p.discountPrice / p.price) * 100)}%
-                      </span>
-                    )}
-
-                    <div className="absolute top-3 right-3 flex flex-col gap-2">
-                      <Link>
-                        <button
-                          onClick={() => toggleWishlist(p)}
-                          className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"
-                        >
-                          <Heart
-                            size={20}
-                            fill={isProductInWishlist ? "#DB4444" : "none"}
-                            stroke={isProductInWishlist ? "#DB4444" : "currentColor"}
-                          />
+        {data?.products?.length > 0 ? (
+          <>
+            <Swiper slidesPerView={1} spaceBetween={30} breakpoints={{ 640: { slidesPerView: 2 }, 1024: { slidesPerView: 4 } }} className="mb-10">
+              {data.products.map((p) => {
+                const isProductInWishlist = wishlist.some(item => item.id === p.id);
+                return (
+                  <SwiperSlide key={p.id}>
+                    <div className="group">
+                      <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
+                        {p.hasDiscount && (
+                          <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-2 py-1 rounded">
+                            -{Math.round(100 - (p.discountPrice / p.price) * 100)}%
+                          </span>
+                        )}
+                        <div className="absolute top-3 right-3 flex flex-col gap-2">
+                          <button onClick={() => toggleWishlist(p)} className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors">
+                            <Heart size={20} fill={isProductInWishlist ? "#DB4444" : "none"} stroke={isProductInWishlist ? "#DB4444" : "currentColor"} />
+                          </button>
+                          <Link to={`/info`} onClick={() => handleViewProduct(p)}>
+                            <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors">
+                              <Eye size={20} />
+                            </button>
+                          </Link>
+                        </div>
+                        <img src={`${URL}/images/${p.image}`} alt={p.productName} className="max-h-[180px] object-contain group-hover:scale-105 transition-transform" />
+                        <button onClick={() => handleAddToCart(p)} className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
+                          Add To Cart
                         </button>
-                      </Link>
-                      <Link to={`/info`} onClick={() => handleViewProduct(p)}>
-                        <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors">
-                          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        </button>
-                      </Link>
+                      </div>
+                      <div className="mt-4">
+                        <h3 className="font-semibold text-black">{p.productName}</h3>
+                        <div className="flex gap-3 font-medium">
+                          <span className="text-[#DB4444]">${p.hasDiscount ? p.discountPrice : p.price}</span>
+                          {p.hasDiscount && <span className="text-gray-400 line-through">${p.price}</span>}
+                        </div>
+                      </div>
                     </div>
-
-                    <img
-                      src={`${URL}/images/${p.image}`}
-                      alt={p.productName}
-                      className="max-h-[180px] object-contain group-hover:scale-105 transition-transform"
-                    />
-
-                    <button style={{cursor:'pointer'}} onClick={() => { dispatch(AddToCart(p.id)) }} className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all">
-                      Add To Cart
-                    </button>
-                  </div>
-
-                  <div className="mt-4">
-                    <h3 className="font-semibold text-black">{p.productName}</h3>
-                    <div className="flex gap-3 font-medium">
-                      {p.hasDiscount ? (
-                        <>
-                          <span className="text-[#DB4444]">${p.discountPrice}</span>
-                          <span className="text-gray-400 line-through">${p.price}</span>
-                        </>
-                      ) : (
-                        <span className="text-[#DB4444]">${p.price}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </SwiperSlide>
-            )
-          })}
-        </Swiper>
-        <Link to='/products'>
-          <div className="flex justify-center mt-14"><button className="bg-[#DB4444] text-white px-12 py-4 rounded">View All Products</button></div>
-        </Link>
+                  </SwiperSlide>
+                )
+              })}
+            </Swiper>
+            <div className="flex justify-center mt-14">
+              <Link to='/products' className="bg-[#DB4444] text-white px-12 py-4 rounded cursor-pointer">View All Products</Link>
+            </div>
+          </>
+        ) : <NoProductsFound />}
       </section>
 
       <section className="max-w-[1170px] mx-auto py-16 border-b">
@@ -279,10 +247,7 @@ const Home = () => {
         <h2 className="text-3xl font-semibold mb-10">Browse By Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
           {category?.map((cat) => (
-            <div
-              key={cat.id}
-              className="border flex flex-col items-center justify-center h-[145px] rounded hover:bg-[#DB4444] hover:text-white transition-colors cursor-pointer group"
-            >
+            <div key={cat.id} className="border flex flex-col items-center justify-center h-[145px] rounded hover:bg-[#DB4444] hover:text-white transition-colors cursor-pointer group">
               <img src={URL + `/images/${cat.categoryImage}`} alt="" />
               <span className="text-sm font-medium">{cat.categoryName}</span>
             </div>
@@ -304,7 +269,7 @@ const Home = () => {
           </div>
           <button className="bg-[#00FF66] text-white px-12 py-4 rounded">Buy Now!</button>
         </div>
-        <img src={musicBox} className="w-full max-w-[500px] object-contain mt-10 md:mt-0" />
+        <img src={musicBox} className="w-full max-w-[500px] object-contain mt-10 md:mt-0" alt="Speaker" />
       </section>
 
       <section className="max-w-[1170px] mx-auto py-16 border-b">
@@ -313,72 +278,42 @@ const Home = () => {
           <span className="text-[#DB4444] font-semibold">Our Products</span>
         </div>
         <h2 className="text-3xl font-semibold mb-10">Explore Our Products</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {data?.products?.map((p) => {
-            const isProductInWishlist = wishlist.some(item => item.id === p.id);
-            return (
-              <div key={p.id} className="group cursor-pointer">
-                <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
-                  {p.hasDiscount && (
-                    <span className="absolute top-3 left-3 bg-[#00FF66] text-white text-xs px-3 py-1 rounded">
-                      NEW
-                    </span>
-                  )}
-                  <div className="absolute top-3 right-3 flex flex-col gap-2">
-                    <button
-                      onClick={() => toggleWishlist(p)}
-                      className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"
-                    >
-                      <Heart size={20} fill={isProductInWishlist ? "red" : "none"} />
-                    </button>
-                    <Link to={`/product/${p.id}`} onClick={() => handleViewProduct(p)}>
-                      <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
+        {data?.products?.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {data.products.map((p) => {
+              const isProductInWishlist = wishlist.some(item => item.id === p.id);
+              return (
+                <div key={p.id}>
+                  <div className="group cursor-pointer">
+                    <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
+                      <div className="absolute top-3 right-3 flex flex-col gap-2">
+                        <button onClick={() => toggleWishlist(p)} className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors">
+                          <Heart size={20} fill={isProductInWishlist ? "red" : "none"} stroke={isProductInWishlist ? "red" : "currentColor"} />
+                        </button>
+                        <Link to={`/product/${p.id}`} onClick={() => handleViewProduct(p)}>
+                          <button className="bg-white p-1.5 rounded-full hover:bg-[#DB4444] hover:text-white transition-colors"><Eye size={20} /></button>
+                        </Link>
+                      </div>
+                      <img src={`${URL}/images/${p.image}`} alt={p.productName} className="max-h-[180px] object-contain group-hover:scale-105 transition-transform" />
+                      <button onClick={() => handleAddToCart(p)} className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
+                        Add To Cart
                       </button>
-                    </Link>
-                  </div>
-                  <img
-                    src={`${URL}/images/${p.image}`}
-                    alt={p.productName}
-                    className="max-h-[180px] object-contain group-hover:scale-105 transition-transform"
-                  />
-                  <button style={{cursor:'pointer'}} className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all">
-                    Add To Cart
-                  </button>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <h3 className="font-semibold">{p.productName}</h3>
-                  <div className="flex gap-2 items-center">
-                    <span className="text-[#DB4444] font-medium">
-                      ${p.hasDiscount ? p.discountPrice : p.price}
-                    </span>
-                    <div className="flex text-[#FFAD33]">
-                      {[...Array(5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          width="16"
-                          height="16"
-                          fill={i < 5 ? "currentColor" : "none"}
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                      ))}
                     </div>
-                    <span className="text-xs text-gray-400">({p.quantity})</span>
+                    <div className="mt-4 space-y-2">
+                      <h3 className="font-semibold">{p.productName}</h3>
+                      <div className="flex gap-2 items-center">
+                        <span className="text-[#DB4444] font-medium">${p.hasDiscount ? p.discountPrice : p.price}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
+        ) : <NoProductsFound />}
+        <div className="flex justify-center mt-14">
+            <Link to='/products' className="bg-[#DB4444] text-white px-12 py-4 rounded cursor-pointer">View All Products</Link>
         </div>
-        <Link to='/products'>
-          <div className="flex justify-center mt-14"><button className="bg-[#DB4444] text-white px-12 py-4 rounded">View All Products</button></div>
-        </Link>
       </section>
 
       <section className="max-w-[1170px] mx-auto py-16">
@@ -387,71 +322,35 @@ const Home = () => {
           <span className="text-[#DB4444] font-semibold">Featured</span>
         </div>
         <h2 className="text-3xl font-semibold mb-10">New Arrival</h2>
-
         <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-8 h-auto md:h-[600px]">
-
           <div className="md:col-span-2 md:row-span-2 bg-black rounded relative overflow-hidden group flex items-end p-8">
-            <img
-              src={ps5}
-              alt="PS5"
-              className="absolute inset-0 w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105"
-            />
+            <img src={ps5} alt="PS5" className="absolute inset-0 w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-105" />
             <div className="relative z-10 text-white space-y-3">
               <h3 className="text-2xl font-semibold">PlayStation 5</h3>
-              <p className="text-sm text-gray-300 max-w-[240px]">
-                Black and White version of the PS5 coming out on sale.
-              </p>
-              <button className="border-b border-gray-400 hover:border-white pb-1 font-medium transition-colors">
-                Shop Now
-              </button>
+              <p className="text-sm text-gray-300 max-w-[240px]">Black and White version of the PS5 coming out on sale.</p>
+              <button className="border-b border-gray-400 hover:border-white pb-1 font-medium transition-colors">Shop Now</button>
             </div>
           </div>
-
           <div className="md:col-span-2 bg-[#0D0D0D] rounded relative overflow-hidden group flex items-end p-6">
-            <img
-              src={women}
-              alt="Women"
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            />
+            <img src={women} alt="Women" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="relative z-10 text-white space-y-2">
               <h3 className="text-xl font-semibold">Women's Collections</h3>
-              <p className="text-xs text-gray-300 max-w-[200px]">
-                Featured woman collections that give you another vibe.
-              </p>
-              <button className="border-b border-gray-400 hover:border-white pb-1 text-sm transition-colors">
-                Shop Now
-              </button>
+              <button className="border-b border-gray-400 hover:border-white pb-1 text-sm transition-colors">Shop Now</button>
             </div>
           </div>
-
           <div className="bg-[#0D0D0D] rounded relative overflow-hidden group flex items-end p-6">
-            <img
-              src={kalonka}
-              alt="Speakers"
-              className="absolute inset-0 w-full h-full object-contain p-6 transition-transform duration-500 group-hover:scale-105"
-            />
+            <img src={kalonka} alt="Speakers" className="absolute inset-0 w-full h-full object-contain p-6 transition-transform duration-500 group-hover:scale-105" />
             <div className="relative z-10 text-white space-y-2">
               <h3 className="text-lg font-semibold">Speakers</h3>
-              <p className="text-xs text-gray-300">Amazon wireless speakers</p>
-              <button className="border-b border-gray-400 hover:border-white pb-1 text-xs transition-colors">
-                Shop Now
-              </button>
+              <button className="border-b border-gray-400 hover:border-white pb-1 text-xs transition-colors">Shop Now</button>
             </div>
           </div>
-
           <div className="bg-[#0D0D0D] rounded relative overflow-hidden group flex items-end p-6">
-            <img
-              src={duhi}
-              alt="Perfume"
-              className="absolute inset-0 w-full h-full object-contain p-6 transition-transform duration-500 group-hover:scale-105"
-            />
+            <img src={duhi} alt="Perfume" className="absolute inset-0 w-full h-full object-contain p-6 transition-transform duration-500 group-hover:scale-105" />
             <div className="relative z-10 text-white space-y-2">
               <h3 className="text-lg font-semibold">Perfume</h3>
-              <p className="text-xs text-gray-300">GUCCI INTENSE OUD EDP</p>
-              <button className="border-b border-gray-400 hover:border-white pb-1 text-xs transition-colors">
-                Shop Now
-              </button>
+              <button className="border-b border-gray-400 hover:border-white pb-1 text-xs transition-colors">Shop Now</button>
             </div>
           </div>
         </div>

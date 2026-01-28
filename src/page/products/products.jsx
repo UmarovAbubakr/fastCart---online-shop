@@ -4,42 +4,55 @@ import { getProducts } from '../../api/productApi/productApi';
 import { getBrands } from './../../api/brandApi/brandApi';
 import { URL } from '../../utils/url';
 import { getCategory } from '../../api/categoryApi/categoryApi';
-
+import { Search, PackageSearch } from 'lucide-react';
+import img from './../../assets/image copy 6.png'
 const Products = () => {
   const dispatch = useDispatch();
+  const [search, setSearch] = useState('');
   const { data } = useSelector((state) => state.todo);
   const { data: brands } = useSelector((state) => state.todoBrand);
   const { data: category } = useSelector((state) => state.todoCategory);
 
-  const [params, setParams] = useState('');
-  const [selectedBrand, setSelectedBrand] = useState('');
+  const [params, setParams] = useState({});
   const [priceRange, setPriceRange] = useState({ min: 0, max: 999999 });
 
   useEffect(() => {
     dispatch(getBrands());
-  }, [dispatch]);
-
-  useEffect(() => {
     dispatch(getCategory());
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(getProducts(params));
-    console.log(params);
-  }, [dispatch, params]);
+    const timer = setTimeout(() => {
+      dispatch(getProducts({ ...params, ProductName: search }));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [dispatch, params, search]);
 
   const productsArray = data?.products || (Array.isArray(data) ? data : []);
 
   const filteredProducts = productsArray.filter(product => {
-    const matchesBrand = selectedBrand ? product.brandId === selectedBrand : true;
-    const matchesPrice = product.price >= priceRange.min && product.price <= priceRange.max;
-    return matchesBrand && matchesPrice;
+    return product.price >= priceRange.min && product.price <= priceRange.max;
   });
 
-  return (
-    <div className="max-w-[1170px] mx-auto py-10 px-4 flex gap-8">
-      <aside className="w-[250px] shrink-0 flex flex-col gap-8">
+  const clearFilters = () => {
+    setSearch('');
+    setParams({});
+    setPriceRange({ min: 0, max: 999999 });
+  };
 
+  return (
+    <div className="max-w-[1170px] mx-auto py-10 px-4 flex flex-col md:flex-row gap-8">
+      <aside className="w-full md:w-[250px] shrink-0 flex flex-col gap-8">
+        <div className="relative flex items-center">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            type="text"
+            placeholder="Search products..."
+            className="bg-[#f5f5f5] text-sm py-2 px-4 rounded w-full focus:outline-none border focus:border-gray-300"
+          />
+          <Search size={18} className="absolute right-3 text-gray-400" />
+        </div>
 
         <div>
           <h3 className="text-xl font-medium mb-4 pb-2 border-b">Category</h3>
@@ -48,18 +61,18 @@ const Products = () => {
               <input
                 type="radio"
                 name="category"
-                defaultChecked
+                checked={!params.CategoryId}
                 onChange={() => setParams({ ...params, CategoryId: "" })}
                 className="w-4 h-4 accent-[#ce2727]"
               />
-              <span className="text-gray-600 group-hover:text-black">All</span>
+              <span className="text-gray-600 group-hover:text-black">All Categories</span>
             </label>
-
             {category?.map((cat) => (
               <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="radio"
                   name="category"
+                  checked={params.CategoryId === cat.id}
                   onChange={() => setParams({ ...params, CategoryId: cat.id })}
                   className="w-4 h-4 accent-[#ce2727]"
                 />
@@ -71,24 +84,23 @@ const Products = () => {
 
         <div>
           <h3 className="text-xl font-medium mb-4 pb-2 border-b">Brands</h3>
-
           <div className="space-y-2">
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
                 type="radio"
                 name="brand"
-                defaultChecked
+                checked={!params.BrandId}
                 onChange={() => setParams({ ...params, BrandId: "" })}
                 className="w-4 h-4 accent-[#ce2727]"
               />
-              <span className="text-gray-600 group-hover:text-black">All</span>
+              <span className="text-gray-600 group-hover:text-black">All Brands</span>
             </label>
             {brands?.map((brand) => (
               <label key={brand.id} className="flex items-center gap-3 cursor-pointer group">
                 <input
                   type="radio"
                   name="brand"
-                  value={selectedBrand}
+                  checked={params.BrandId === brand.id}
                   onChange={() => setParams({ ...params, BrandId: brand.id })}
                   className="w-4 h-4 accent-[#ce2727]"
                 />
@@ -100,33 +112,72 @@ const Products = () => {
 
         <div>
           <h3 className="text-xl font-medium mb-4 pb-2 border-b">Price range</h3>
-          <div className="flex gap-2 items-center mb-4">
-            <input type="number" placeholder="Min" className="w-full border rounded p-2 text-sm outline-none" onChange={(e) => setPriceRange({ ...priceRange, min: +e.target.value })} />
+          <div className="flex gap-2 items-center">
+            <input 
+                type="number" 
+                value={priceRange.min || ''}
+                placeholder="Min" 
+                className="w-full border rounded p-2 text-sm outline-none focus:border-[#ce2727]" 
+                onChange={(e) => setPriceRange({ ...priceRange, min: +e.target.value })} 
+            />
             <span>-</span>
-            <input type="number" placeholder="Max" className="w-full border rounded p-2 text-sm outline-none" onChange={(e) => setPriceRange({ ...priceRange, max: +e.target.value })} />
+            <input 
+                type="number" 
+                value={priceRange.max === 999999 ? '' : priceRange.max}
+                placeholder="Max" 
+                className="w-full border rounded p-2 text-sm outline-none focus:border-[#ce2727]" 
+                onChange={(e) => setPriceRange({ ...priceRange, max: +e.target.value })} 
+            />
           </div>
         </div>
       </aside>
 
       <main className="flex-1">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="group relative border rounded-md p-4 hover:shadow-lg transition-shadow">
-              <div className="bg-[#F5F5F5] rounded h-[250px] flex items-center justify-center relative overflow-hidden">
-                <img src={`${URL}/images/${product.image}`} alt="" className="object-contain h-[80%] group-hover:scale-110 transition-transform" />
-                {product.discount > 0 && <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-3 py-1 rounded">-{product.discount}%</span>}
-                <button className="cursor-pointer absolute bottom-0 w-full bg-black text-white py-2 translate-y-full group-hover:translate-y-0 transition-transform">Add To Cart</button>
-              </div>
-              <div className="mt-4">
-                <h4 className="font-medium truncate">{product.productName}</h4>
-                <div className="flex gap-3 mt-2">
-                  <span className="text-[#DB4444] font-medium">${product.price}</span>
-                  {product.oldPrice && <span className="text-gray-400 line-through">${product.oldPrice}</span>}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="group relative border rounded-md p-4 hover:shadow-lg transition-all duration-300">
+                <div className="bg-[#F5F5F5] rounded h-[250px] flex items-center justify-center relative overflow-hidden">
+                  <img 
+                    src={`${URL}/images/${product.image}`} 
+                    alt={product.productName} 
+                    className="object-contain h-[80%] group-hover:scale-110 transition-transform duration-500" 
+                  />
+                  {product.discount > 0 && (
+                    <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-3 py-1 rounded">
+                      -{product.discount}%
+                    </span>
+                  )}
+                  <button className="absolute bottom-0 w-full bg-black text-white py-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300 cursor-pointer">
+                    Add To Cart
+                  </button>
+                </div>
+                <div className="mt-4">
+                  <h4 className="font-medium truncate text-gray-800">{product.productName}</h4>
+                  <div className="flex gap-3 mt-2 items-center">
+                    <span className="text-[#DB4444] font-bold">${product.price}</span>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-24 bg-[#f9f9f9] rounded-xl border-2 border-dashed border-gray-200">
+            <div className="bg-white p-6 rounded-full shadow-sm mb-4">
+              <img className='w-[150px]' src={img} alt="" />
             </div>
-          ))}
-        </div>
+            <h3 className="text-2xl font-semibold text-gray-700">No results found</h3>
+            <p className="text-gray-500 mt-2 text-center max-w-[300px]">
+              Try adjusting your filters or search terms to find what you're looking for.
+            </p>
+            <button 
+              onClick={clearFilters}
+              className="mt-6 px-8 py-2 bg-[#FFC845] text-white rounded shadow-md hover:bg-[#ffd677] transition-colors"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );
