@@ -6,19 +6,29 @@ import { URL } from '../../utils/url';
 import { getCategory } from '../../api/categoryApi/categoryApi';
 import { Search, PackageSearch } from 'lucide-react';
 import img from './../../assets/image copy 6.png'
+import { AddToCart } from '../../api/cart API/cartApi';
+import { notification } from 'antd';
+import { useNavigate } from 'react-router-dom';
+const token = localStorage.getItem('token');
+
 const Products = () => {
+  const [api, contextHolder] = notification.useNotification();
   const dispatch = useDispatch();
   const [search, setSearch] = useState('');
   const { data } = useSelector((state) => state.todo);
+  const cartItems = useSelector((state) => state.cart?.data || []);
   const { data: brands } = useSelector((state) => state.todoBrand);
   const { data: category } = useSelector((state) => state.todoCategory);
-
+  const navigate = useNavigate()
   const [params, setParams] = useState({});
   const [priceRange, setPriceRange] = useState({ min: 0, max: 999999 });
 
   useEffect(() => {
     dispatch(getBrands());
     dispatch(getCategory());
+    if(!token) {
+      navigate('/LogIn')
+    }
   }, [dispatch]);
 
   useEffect(() => {
@@ -40,8 +50,37 @@ const Products = () => {
     setPriceRange({ min: 0, max: 999999 });
   };
 
+  const handleAddToCart = (product) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      api.error({
+        message: 'Please Login First',
+        description: 'You need to be logged in to add items to cart',
+        placement: 'bottomRight',
+      });
+      return;
+    }
+
+    const isExist = cartItems.some(item => item.id === product.id);
+    if (isExist) {
+      api.warning({
+        message: 'Product already in cart',
+        description: `${product.productName} is already there.`,
+        placement: 'bottomRight',
+      });
+    } else {
+      dispatch(AddToCart(product.id));
+      api.success({
+        message: 'Added to cart',
+        description: `${product.productName} added successfully.`,
+        placement: 'bottomRight',
+      });
+    }
+  };
+
   return (
     <div className="max-w-[1170px] mx-auto py-10 px-4 flex flex-col md:flex-row gap-8">
+      {contextHolder}
       <aside className="w-full md:w-[250px] shrink-0 flex flex-col gap-8">
         <div className="relative flex items-center">
           <input
@@ -113,20 +152,20 @@ const Products = () => {
         <div>
           <h3 className="text-xl font-medium mb-4 pb-2 border-b">Price range</h3>
           <div className="flex gap-2 items-center">
-            <input 
-                type="number" 
-                value={priceRange.min || ''}
-                placeholder="Min" 
-                className="w-full border rounded p-2 text-sm outline-none focus:border-[#ce2727]" 
-                onChange={(e) => setPriceRange({ ...priceRange, min: +e.target.value })} 
+            <input
+              type="number"
+              value={priceRange.min || ''}
+              placeholder="Min"
+              className="w-full border rounded p-2 text-sm outline-none focus:border-[#ce2727]"
+              onChange={(e) => setPriceRange({ ...priceRange, min: +e.target.value })}
             />
             <span>-</span>
-            <input 
-                type="number" 
-                value={priceRange.max === 999999 ? '' : priceRange.max}
-                placeholder="Max" 
-                className="w-full border rounded p-2 text-sm outline-none focus:border-[#ce2727]" 
-                onChange={(e) => setPriceRange({ ...priceRange, max: +e.target.value })} 
+            <input
+              type="number"
+              value={priceRange.max === 999999 ? '' : priceRange.max}
+              placeholder="Max"
+              className="w-full border rounded p-2 text-sm outline-none focus:border-[#ce2727]"
+              onChange={(e) => setPriceRange({ ...priceRange, max: +e.target.value })}
             />
           </div>
         </div>
@@ -138,17 +177,17 @@ const Products = () => {
             {filteredProducts.map((product) => (
               <div key={product.id} className="group relative border rounded-md p-4 hover:shadow-lg transition-all duration-300">
                 <div className="bg-[#F5F5F5] rounded h-[250px] flex items-center justify-center relative overflow-hidden">
-                  <img 
-                    src={`${URL}/images/${product.image}`} 
-                    alt={product.productName} 
-                    className="object-contain h-[80%] group-hover:scale-110 transition-transform duration-500" 
+                  <img
+                    src={`${URL}/images/${product.image}`}
+                    alt={product.productName}
+                    className="object-contain h-[80%] group-hover:scale-110 transition-transform duration-500"
                   />
                   {product.discount > 0 && (
                     <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-3 py-1 rounded">
                       -{product.discount}%
                     </span>
                   )}
-                  <button className="absolute bottom-0 w-full bg-black text-white py-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300 cursor-pointer">
+                  <button onClick={() => handleAddToCart(product)} className="absolute bottom-0 w-full bg-black text-white py-2 opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
                     Add To Cart
                   </button>
                 </div>
@@ -170,7 +209,7 @@ const Products = () => {
             <p className="text-gray-500 mt-2 text-center max-w-[300px]">
               Try adjusting your filters or search terms to find what you're looking for.
             </p>
-            <button 
+            <button
               onClick={clearFilters}
               className="mt-6 px-8 py-2 bg-[#FFC845] text-white rounded shadow-md hover:bg-[#ffd677] transition-colors"
             >

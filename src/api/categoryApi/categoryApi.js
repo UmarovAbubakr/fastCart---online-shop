@@ -16,7 +16,7 @@ export const getCategory = createAsyncThunk(
 
 export const deleteCategory = createAsyncThunk(
     'todoCategory/deleteCategory',
-    async (id) => {
+    async (id,{dispatch}) => {
         try {
             const { data } = await axios.delete(URL + '/Category/delete-category?id=' + id, {
                 headers: {
@@ -24,6 +24,7 @@ export const deleteCategory = createAsyncThunk(
                 }
             })
             return id
+            dispatch(getCategory())
         } catch (error) {
             console.error(error);
         }

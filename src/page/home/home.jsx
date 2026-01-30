@@ -33,6 +33,7 @@ import { AddToCart } from '../../api/cart API/cartApi';
 const Home = () => {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
+  const [params, setParams] = useState({});
 
   const { data = {} } = useSelector((store) => store.todo);
   const { data: category } = useSelector((state) => state.todoCategory);
@@ -51,6 +52,16 @@ const Home = () => {
   });
 
   const handleAddToCart = (product) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      api.error({
+        message: 'Please Login First',
+        description: 'You need to be logged in to add items to cart',
+        placement: 'bottomRight',
+      });
+      return;
+    }
+
     const isExist = cartItems.some(item => item.id === product.id);
     if (isExist) {
       api.warning({
@@ -72,7 +83,7 @@ const Home = () => {
     const savedWishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
     const isExist = savedWishlist.find(item => item.id === product.id);
     let updatedWishlist;
-    
+
     if (isExist) {
       updatedWishlist = savedWishlist.filter(item => item.id !== product.id);
       api.info({
@@ -88,7 +99,7 @@ const Home = () => {
         placement: 'bottomRight',
       });
     }
-    
+
     setWishlist(updatedWishlist);
     localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
     window.dispatchEvent(new Event('wishlistUpdated'));
@@ -145,7 +156,33 @@ const Home = () => {
   return (
     <div className="w-full bg-white pt-10 px-4 lg:px-10">
       {contextHolder}
-      <div className="max-w-[1170px] mx-auto">
+      <div className="max-w-[1170px] mx-auto flex">
+        <div style={{width:'200px',padding:'10px'}}>
+          <div className="space-y-2">
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <input
+                type="radio"
+                name="category"
+                checked={!params.CategoryId}
+                onChange={() => setParams({ ...params, CategoryId: "" })}
+                className="w-4 h-4 accent-[#ce2727]"
+              />
+              <span className="text-gray-600 group-hover:text-black">All Categories</span>
+            </label>
+            {category?.map((cat) => (
+              <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="radio"
+                  name="category"
+                  checked={params.CategoryId === cat.id}
+                  onChange={() => setParams({ ...params, CategoryId: cat.id })}
+                  className="w-4 h-4 accent-[#ce2727]"
+                />
+                <span className="text-gray-600 group-hover:text-black">{cat.categoryName}</span>
+              </label>
+            ))}
+          </div>
+        </div>
         <Swiper
           style={{ borderRadius: '5px' }}
           spaceBetween={0}
@@ -202,7 +239,7 @@ const Home = () => {
                       <div className="relative bg-[#F5F5F5] h-[250px] flex items-center justify-center rounded overflow-hidden">
                         {p.hasDiscount && (
                           <span className="absolute top-3 left-3 bg-[#DB4444] text-white text-xs px-2 py-1 rounded">
-                            -{Math.round(100 - (p.discountPrice / p.price) * 100)}%
+                            {Math.round(100 - (p.discountPrice / p.price) * 100)}%
                           </span>
                         )}
                         <div className="absolute top-3 right-3 flex flex-col gap-2">
@@ -312,7 +349,7 @@ const Home = () => {
           </div>
         ) : <NoProductsFound />}
         <div className="flex justify-center mt-14">
-            <Link to='/products' className="bg-[#DB4444] text-white px-12 py-4 rounded cursor-pointer">View All Products</Link>
+          <Link to='/products' className="bg-[#DB4444] text-white px-12 py-4 rounded cursor-pointer">View All Products</Link>
         </div>
       </section>
 

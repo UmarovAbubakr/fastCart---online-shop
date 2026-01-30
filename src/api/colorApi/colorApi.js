@@ -16,7 +16,7 @@ export const getColors = createAsyncThunk(
 
 export const deleteColor = createAsyncThunk(
     'todoColor/deleteColor',
-    async (id) => {
+    async (id,{dispatch}) => {
         try {
             await axios.delete(URL + '/Color/delete-color?id=' + id, {
                 headers: {
@@ -24,6 +24,7 @@ export const deleteColor = createAsyncThunk(
                 }
             })
             return id
+            dispatch(getColors())   
         } catch (error) {
             console.error(error);
         }

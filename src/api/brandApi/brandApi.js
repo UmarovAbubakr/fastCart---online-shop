@@ -17,13 +17,14 @@ export const getBrands = createAsyncThunk(
 
 export const deleteBrands = createAsyncThunk(
     'todoBrand/DeleteBrands',
-    async (id) => {
+    async (id,{dispatch}) => {
         try {
             const { data } = await axios.delete(URL + '/Brand/delete-brand?id=' + id, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             })
+            dispatch(getBrands())   
             return id
         } catch (error) {
             console.error(error);
