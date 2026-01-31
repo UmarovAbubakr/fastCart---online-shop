@@ -35,7 +35,7 @@ const Navbar = () => {
     };
 
     const handleOk = () => {
-        localStorage.clear();
+        localStorage.removeItem('token');
 
         setIsModalOpen(false);
         dispatch(getCart())

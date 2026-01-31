@@ -169,7 +169,7 @@ const Home = () => {
           <div className="space-y-2">
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
-                type="radio"
+                type="checkbox"
                 name="category"
                 checked={!params.CategoryId}
                 onChange={() => setParams({ ...params, CategoryId: "" })}
@@ -180,7 +180,7 @@ const Home = () => {
             {category?.map((cat) => (
               <label key={cat.id} className="flex items-center gap-3 cursor-pointer group">
                 <input
-                  type="radio"
+                  type="checkbox"
                   name="category"
                   checked={params.CategoryId === cat.id}
                   onChange={() => setParams({ ...params, CategoryId: cat.id })}
