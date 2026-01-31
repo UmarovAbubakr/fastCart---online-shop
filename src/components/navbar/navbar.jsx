@@ -123,7 +123,7 @@ const Navbar = () => {
                             {localStorage.getItem('token') && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <div><CircleUser size={24} /></div>
+                                        <div><CircleUser className='cursor-pointer' size={24} /></div>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
                                         <DropdownMenuGroup>
