@@ -3,11 +3,14 @@ import emailjs from 'emailjs-com';
 import { Link } from 'react-router-dom';
 
 const Checkout = () => {
-  // Для Vite используем import.meta.env вместо process.env
   const emailjsPublicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || "6YzVHK7FsWOFAq5tU";
-  const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || "service_xi3ycm1";
-  const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || "template_lu6gres";
+  const emailjsServiceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || "service_xi3ycml";
+  const emailjsTemplateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || "lu6gres";
+  console.log(emailjsPublicKey);
+  console.log(emailjsServiceId);
+  console.log(emailjsTemplateId);
   
+
   emailjs.init(emailjsPublicKey);
 
   const [orderItems, setOrderItems] = useState([]);
@@ -19,7 +22,8 @@ const Checkout = () => {
     apartment: '',
     city: '',
     phone: '',
-    email: ''
+    email: '',
+    document: null
   });
   const [saveInfo, setSaveInfo] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -42,46 +46,42 @@ const Checkout = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (e.target.type === 'file') {
+      setFormData({ ...formData, [e.target.name]: e.target.files[0] });
+    } else {
+      setFormData({ ...formData, [e.target.name]: e.target.value });
+    }
   };
 
   const sendOrderEmail = async (orderData) => {
     try {
       const templateParams = {
+        to_email: formData.email,
+        customer_name: `${formData.firstName} ${formData.lastName}`,
+        customer_email: formData.email,
+        customer_phone: formData.phone,
+        customer_address: `${formData.streetAddress}, ${formData.city}`,
         order_id: orderData.orderId,
         order_date: new Date().toLocaleDateString('ru-RU'),
-        customer_name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email,
-        phone: formData.phone,
-        payment_method: paymentMethod === 'cod' ? 'Наличными при получении' : 'Банковский перевод',
-        items: orderData.items.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price?.toFixed(2) || '0.00',
-          total: ((item.price || 0) * (item.quantity || 1)).toFixed(2)
-        })),
-        subtotal: orderData.subtotal?.toFixed(2) || '0.00',
-        shipping: 'Бесплатно',
-        total_amount: orderData.total?.toFixed(2) || '0.00',
-        shipping_address: `
-          ${formData.streetAddress || ''}<br>
-          ${formData.apartment ? 'Кв. ' + formData.apartment + '<br>' : ''}
-          ${formData.city || ''}<br>
-          ${formData.companyName ? 'Компания: ' + formData.companyName + '<br>' : ''}
-          Телефон: ${formData.phone || ''}
-        `
+        order_total: `$${orderData.total.toFixed(2)}`,
+        order_items: orderData.items.map(item =>
+          `${item.name || 'Товар'} x${item.quantity || 1} - $${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`
+        ).join('\n'),
+        subtotal: `$${orderData.subtotal.toFixed(2)}`,
+        shipping: orderData.shipping === 0 ? 'Бесплатно' : `$${orderData.shipping.toFixed(2)}`,
+        payment_method: orderData.paymentMethod === 'cod' ? 'Наличными при получении' : 'Банковский перевод'
       };
 
-      const result = await emailjs.send(
+      const response = await emailjs.send(
         emailjsServiceId,
         emailjsTemplateId,
         templateParams
       );
 
-      console.log('Email успешно отправлен:', result);
+      console.log('✅ Письмо отправлено успешно:', response.status, response.text);
       return true;
     } catch (error) {
-      console.error('Ошибка отправки email:', error);
+      console.error('❌ Ошибка отправки письма:', error);
       return false;
     }
   };
@@ -139,7 +139,7 @@ const Checkout = () => {
         setOrderPlaced(true);
 
         setTimeout(() => {
-          // window.location.href = '/';
+          window.location.href = '/';
         }, 5000);
       } else {
         alert('Заказ оформлен, но не удалось отправить письмо с подтверждением. Пожалуйста, свяжитесь с поддержкой.');
@@ -281,7 +281,7 @@ const Checkout = () => {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-gray400 text-sm">
+            <label className="text-gray-400 text-sm">
               Город <span className="text-[#DB4444]">*</span>
             </label>
             <input
@@ -320,6 +320,19 @@ const Checkout = () => {
               className="bg-[#F5F5F5] rounded p-3 outline-none focus:ring-1 focus:ring-[#DB4444]"
               required
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-gray-400 text-sm">
+              Документы (если требуется)
+            </label>
+            <input
+              type="file"
+              name="document"
+              onChange={handleChange}
+              className="bg-[#F5F5F5] rounded p-3 outline-none focus:ring-1 focus:ring-[#DB4444]"
+            />
+            <p className="text-xs text-gray-500">Максимальный размер: 5MB</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -414,8 +427,8 @@ const Checkout = () => {
               onClick={handlePlaceOrder}
               disabled={isSending}
               className={`w-full py-3 rounded font-medium transition-colors mt-6 ${isSending
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#DB4444] text-white hover:bg-[#c03939]'
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-[#DB4444] text-white hover:bg-[#c03939]'
                 }`}
             >
               {isSending ? (

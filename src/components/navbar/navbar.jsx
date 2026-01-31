@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'; // Добавь в импорты
 import React, { useEffect, useState } from 'react';
-import { Search, Heart, ShoppingCart, User, Settings, Menu, X, LogOut } from 'lucide-react';
+import { Search, Heart, ShoppingCart, User, Settings, Menu, X, LogOut, CircleUser } from 'lucide-react';
 import fastCard from './../../assets/fastCard.svg'
 import { Link, Outlet } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -123,7 +123,7 @@ const Navbar = () => {
                             {localStorage.getItem('token') && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <div><Settings size={24} /></div>
+                                        <div><CircleUser size={24} /></div>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
                                         <DropdownMenuGroup>

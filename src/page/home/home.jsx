@@ -110,9 +110,9 @@ const Home = () => {
   };
 
   useEffect(() => {
-    dispatch(getProducts());
+    dispatch(getProducts(params));
     dispatch(getCategory());
-  }, [dispatch]);
+  }, [dispatch,params]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -153,11 +153,19 @@ const Home = () => {
     </div>
   );
 
+  const filteredProducts = React.useMemo(() => {
+    if (!params.CategoryId || !data?.products) return data?.products || [];
+
+    return data.products.filter(product =>
+      product.categoryId === params.CategoryId
+    );
+  }, [data?.products, params.CategoryId]);
+
   return (
     <div className="w-full bg-white pt-10 px-4 lg:px-10">
       {contextHolder}
       <div className="max-w-[1170px] mx-auto flex">
-        <div style={{width:'200px',padding:'10px'}}>
+        <div style={{ width: '200px', padding: '10px' }}>
           <div className="space-y-2">
             <label className="flex items-center gap-3 cursor-pointer group">
               <input
@@ -282,14 +290,38 @@ const Home = () => {
           <span className="text-[#DB4444] font-semibold">Categories</span>
         </div>
         <h2 className="text-3xl font-semibold mb-10">Browse By Category</h2>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
+
+        <Swiper
+          slidesPerView={1}
+          spaceBetween={30}
+          breakpoints={{
+            480: { slidesPerView: 2 },
+            640: { slidesPerView: 3 },
+            768: { slidesPerView: 4 },
+            1024: { slidesPerView: 5 },
+            1280: { slidesPerView: 6 }
+          }}
+          pagination={{ clickable: true }}
+          className="categories-swiper"
+        >
+
           {category?.map((cat) => (
-            <div key={cat.id} className="border flex flex-col items-center justify-center h-[145px] rounded hover:bg-[#DB4444] hover:text-white transition-colors cursor-pointer group">
-              <img src={URL + `/images/${cat.categoryImage}`} alt="" />
-              <span className="text-sm font-medium">{cat.categoryName}</span>
-            </div>
+            <SwiperSlide key={cat.id}>
+              <div
+                className={`border flex flex-col items-center justify-center h-[145px] rounded hover:bg-[#DB4444] hover:text-white transition-colors cursor-pointer p-4
+                ${params.CategoryId === cat.id ? 'bg-[#DB4444] text-white' : ''}`}
+                onClick={() => setParams({ ...params, CategoryId: cat.id })}
+              >
+                <img
+                  src={URL + `/images/${cat.categoryImage}`}
+                  alt={cat.categoryName}
+                  className="h-16 w-16 object-contain mb-3 group-hover:brightness-0 group-hover:invert transition-all"
+                />
+                <span className="text-sm font-medium text-center">{cat.categoryName}</span>
+              </div>
+            </SwiperSlide>
           ))}
-        </div>
+        </Swiper>
       </section>
 
       <section className="max-w-[1170px] mx-auto py-16 bg-black flex flex-col md:flex-row items-center justify-between rounded px-10 my-16">
